@@ -65,6 +65,7 @@ node_modules/
 # dotenv environment variables file
 .env
 
-## admin keys
-service-key
+## admin keys and configs
+service-key.json
 travlr-61d7f-firebase-adminsdk-ibttx-4db66d2465.json
+firebase.json
