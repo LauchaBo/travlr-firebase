@@ -55,10 +55,15 @@ exports.makeUppercase = functions.firestore.document('/messages/{documentId}')
 var validator = require('validator');
 
 exports.createUser = functions.https.onRequest((req, res) => {
-  console.log(req.body)
-  console.log(req.body.email)
+  errors = []
   if (!validator.isEmail(req.body.email)) {
-    throw new Error('Wrong email, queen');
+    errors.push({field: 'email', message: 'Invalid email'})
+  }
+  if (validator.isEmpty(req.body.firstName)) {
+    errors.push({field: 'firstName', message: 'First name is required'})
+  }
+  if (errors.length > 0) {
+    res.status(400).send(errors)
   }
   // const user = {
   //   email: request.email,
@@ -80,6 +85,31 @@ exports.createUser = functions.https.onRequest((req, res) => {
   //   return user;
   }
 )
+
+// Middleware
+// app.use((err, req, res, next) => {
+//   console.error(err.message); // Log error message in our server's console
+//   if (!err.statusCode) err.statusCode = 500; // If err has no specified error code, set error code to 'Internal Server Error (500)'
+//   res.status(err.statusCode).send(err.message); // All HTTP requests must have a response, so let's send back an error with its status code and message
+// });
+
+// app.get((req, res, next) => {
+//   let err = new Error('Page Not Found');
+//   err.statusCode = 404;
+//   next(err);
+// });
+
+
+
+
+
+
+
+
+
+
+
+
 
 // signup de fede --BORRAR--
 exports.signUp = (req, res, next) => {
