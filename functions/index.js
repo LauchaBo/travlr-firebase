@@ -1,16 +1,17 @@
+/* eslint-disable promise/always-return */
 // The Cloud Functions for Firebase SDK to create Cloud Functions and setup triggers.
 const functions = require('firebase-functions');
 
 // The Firebase Admin SDK to access Cloud Firestore.
 var admin = require("firebase-admin");
 // var user = require('./user')
-
-// TODO delete if not used
-// var serviceAccount = require("D:/UADE/PFI/Travlr/service-key.json");
+const serviceAccount = require('D:/UADE/PFI/Travlr/service-key.json');
 
 admin.initializeApp({
   credential: admin.credential.applicationDefault(),
+  // credential: admin.credential.cert(serviceAccount),
   databaseURL: "https://travlr-61d7f.firebaseio.com"
+
 });
 
 // TODO Remove example functions after other functions are coded
@@ -52,37 +53,44 @@ exports.makeUppercase = functions.firestore.document('/messages/{documentId}')
     });
 
 // USER.JS
+var db = admin.firestore();
+
 var validator = require('validator');
 
 exports.createUser = functions.https.onRequest((req, res) => {
   errors = []
   if (!validator.isEmail(req.body.email)) {
-    errors.push({field: 'email', message: 'Invalid email'})
+    errors.push({code: 'invalid', field: 'email', message: 'Invalid email'})
   }
   if (validator.isEmpty(req.body.firstName)) {
-    errors.push({field: 'firstName', message: 'First name is required'})
+    errors.push({code: 'required', field: 'firstName', message: 'First name is required'})
+  }
+  if (validator.isEmpty(req.body.lastName)) {
+    errors.push({code: 'required', field: 'lastName', message: 'First name is required'})
   }
   if (errors.length > 0) {
     res.status(400).send(errors)
   }
-  // const user = {
-  //   email: request.email,
-  //   emailVerified: false,
-  //   password: request.password,
-  //   firstName: request.firstName,
-  //   lastName: request.lastName,
-  //   disabled: false
-  // }
-  // admin.auth().createUser(user)
-  //   .then(userRecord => {
-  //     // See the UserRecord reference doc for the contents of userRecord.
-  //     console.log('Successfully created new user:', userRecord.uid);
-  //     return response.json(userRecord)
-  //   })
-  //   .catch(error => {
-  //     console.log('Error creating new user:', error);
-  //   });
-  //   return user;
+  const user = {
+    email: req.body.email,
+    emailVerified: false,
+    password: req.body.password,
+    firstName: req.body.firstName,
+    lastName: req.body.lastName,
+    disabled: false,
+    photoURL: 'https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png'
+  }
+  admin.auth().createUser(user)
+    .then(userRecord => {
+      console.log('Successfully created new user:', userRecord.uid);
+      delete user.password;
+      db.collection('users').doc(userRecord.uid).set(user);
+      res.status(200).send(user)
+    })
+    .catch(error => {
+      console.log('Error creating new user:', error);
+      res.status(500).send(error)
+    });
   }
 )
 
