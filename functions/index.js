@@ -3,15 +3,31 @@
 const functions = require('firebase-functions');
 
 // The Firebase Admin SDK to access Cloud Firestore.
-var admin = require("firebase-admin");
+var admin = require('firebase-admin');
 // var user = require('./user')
 const serviceAccount = require('D:/UADE/PFI/Travlr/service-key.json');
 
+// Initialize Admin SDK
 admin.initializeApp({
   credential: admin.credential.applicationDefault(),
   // credential: admin.credential.cert(serviceAccount),
-  databaseURL: "https://travlr-61d7f.firebaseio.com"
+  databaseURL: 'https://travlr-61d7f.firebaseio.com'
+});
 
+var firebase = require ('firebase')
+// Initialize default app
+// Retrieve your own options values by adding a web app on
+// https://console.firebase.google.com
+firebase.initializeApp({
+  projectId: 'travlr-61d7f',
+  appId: '1:86329584280:web:19ac31cf1bccce32313eed',
+  databaseURL: 'https://travlr-61d7f.firebaseio.com',
+  storageBucket: 'travlr-61d7f.appspot.com',
+  locationId: 'us-east1',
+  apiKey: 'AIzaSyC3LO_w5TGOUYTG4hLASD6fR7Y1zGRPH7I',
+  authDomain: 'travlr-61d7f.firebaseapp.com',
+  messagingSenderId: '86329584280',
+  measurementId: 'G-NFSKTEG1GC'
 });
 
 // TODO Remove example functions after other functions are coded
@@ -19,8 +35,8 @@ admin.initializeApp({
 // // https://firebase.google.com/docs/functions/write-firebase-functions
 
 exports.helloWorld = functions.https.onRequest((request, response) => {
-  functions.logger.info("Hello logs!", {structuredData: true});
-  response.send("Hello from Firebase!");
+  functions.logger.info('Hello logs!', {structuredData: true});
+  response.send('Hello from Firebase!');
 });
 
 // Take the text parameter passed to this HTTP endpoint and insert it into 
@@ -54,18 +70,17 @@ exports.makeUppercase = functions.firestore.document('/messages/{documentId}')
 
 // USER.JS
 var db = admin.firestore();
-
 var validator = require('validator');
 
 exports.createUser = functions.https.onRequest((req, res) => {
   errors = []
-  if (!validator.isEmail(req.body.email)) {
+  if (!req.body.email || !validator.isEmail(req.body.email) || validator.isEmpty(req.body.email)) {
     errors.push({code: 'invalid', field: 'email', message: 'Invalid email'})
   }
-  if (validator.isEmpty(req.body.firstName)) {
+  if (!req.body.firstName ||validator.isEmpty(req.body.firstName)) {
     errors.push({code: 'required', field: 'firstName', message: 'First name is required'})
   }
-  if (validator.isEmpty(req.body.lastName)) {
+  if (!req.body.lastName ||validator.isEmpty(req.body.lastName)) {
     errors.push({code: 'required', field: 'lastName', message: 'First name is required'})
   }
   if (errors.length > 0) {
@@ -82,15 +97,35 @@ exports.createUser = functions.https.onRequest((req, res) => {
   }
   admin.auth().createUser(user)
     .then(userRecord => {
-      console.log('Successfully created new user:', userRecord.uid);
-      delete user.password;
-      db.collection('users').doc(userRecord.uid).set(user);
+      console.log('Successfully created new user:', userRecord.uid)
+      delete user.password
+      db.collection('users').doc(userRecord.uid).set(user)
       res.status(200).send(user)
     })
     .catch(error => {
-      console.log('Error creating new user:', error);
+      console.log('Error creating new user:', error)
       res.status(500).send(error)
     });
+  }
+)
+
+exports.logIn = functions.https.onRequest((req, res) => {
+  errors = []
+  if (!req.body.email || !validator.isEmail(req.body.email) || validator.isEmpty(req.body.email)) {
+    errors.push({code: 'invalid', field: 'email', message: 'Invalid email'})
+  }
+  if (errors.length > 0) {
+    res.status(400).send(errors)
+  }
+  firebase.auth().signInWithEmailAndPassword(req.body.email, req.body.password)
+    .then(userCredentials => {
+      console.log('Successfully logged in:', userCredentials)
+      res.status(200).send(userCredentials)
+    })
+    .catch(error => {
+      console.log('Error logging in user:', error)
+      res.status(500).send(error)
+    })
   }
 )
 
