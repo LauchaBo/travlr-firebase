@@ -129,6 +129,22 @@ exports.logIn = functions.https.onRequest((req, res) => {
   }
 )
 
+exports.getUserData = functions.https.onRequest((req, res) => {
+  db.collection('users').doc(req.body.uid).get()
+    .then(snapshot => {
+      if (!snapshot.exists) {
+        console.log('No such document!');
+        res.status(404).send('Document not found.')
+      } else {
+        console.log('Document data:', snapshot.data());
+        res.status(200).send(snapshot.data())
+      }
+    })
+    .catch(error => {
+      res.status(500).send(error)
+    })
+})
+
 // Middleware
 // app.use((err, req, res, next) => {
 //   console.error(err.message); // Log error message in our server's console
