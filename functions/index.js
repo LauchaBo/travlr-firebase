@@ -23,8 +23,17 @@ firebase.initializeApp({
 
 // Function imports
 const middleware = require('./middleware')
+const auth = require('./auth')
 const user = require('./user')
 
 exports.middleware = middleware
+exports.auth = auth
 exports.user = user
 
+// DB TEST
+const functions = require('firebase-functions');
+
+exports.dbTest = functions.https.onRequest((req, res) => {
+  admin.firestore().collection('users').doc('testtt').set({ test: 'test' })
+  res.status(200).send('Todo ok')
+})
